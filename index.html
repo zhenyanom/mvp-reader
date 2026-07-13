@@ -62,10 +62,10 @@
             font-weight: bold;
             line-height: 1.3;
             white-space: pre-wrap;
-            /* Warna putih transparansinya disesuaikan agar isi teks tembus pandang */
-            color: rgba(255, 255, 255, 0.4); 
-            /* Outline/bayangan hitam tebal agar teks TETEGP TERBACA di gambar terang maupun gelap */
-            text-shadow: 1px 1px 4px rgba(0,0,0,0.9), -1px -1px 4px rgba(0,0,0,0.9);
+            /* Transparansi diturunkan jauh jadi 20% (sangat pudar) */
+            color: rgba(255, 255, 255, 0.2); 
+            /* Bayangan ditipiskan, hanya agar teks tak hilang di background putih */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
         }
     </style>
 </head>
@@ -108,22 +108,17 @@
             });
 
             // ==========================================
-            // ⚔️ FORMAT WATERMARK BARU
+            // ⚔️ FORMAT WATERMARK (VERSI HALUS)
             // ==========================================
             const user = tg.initDataUnsafe?.user;
             
-            // Jika member tidak punya username, tulis NoUsername
             const usn = user?.username ? `@${user.username}` : 'NoUsername';
-            
-            // Mengambil ID asli member
             const userId = user?.id || 'UnknownID';
             
-            // Format: Crown -> MVP -> @usn | ID -> DO NOT REPOST
             const watermarkText = `👑\nMVP\n${usn} | ${userId}\nDO NOT REPOST`;
             
             const wmLayer = document.getElementById('watermark-layer');
             
-            // 4 Posisi Kunci
             const positions = [
                 { top: 15, left: 50 },
                 { top: 40, left: 20 },
@@ -138,12 +133,10 @@
                 
                 wmDiv.style.top = `${pos.top}%`;
                 wmDiv.style.left = `${pos.left}%`;
-                
-                // Rotasi diturunkan sedikit dari 25 ke 20 derajat agar teks ID lebih mudah dibaca
                 wmDiv.style.transform = `translate(-50%, -50%) rotate(-20deg)`;
                 
-                // Ukuran font diperbesar agar ID terlihat jelas
-                wmDiv.style.fontSize = `24px`; 
+                // Ukuran font diperkecil sedikit agar tidak mengganggu panel komik
+                wmDiv.style.fontSize = `18px`; 
                 
                 wmLayer.appendChild(wmDiv);
             });
