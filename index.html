@@ -8,15 +8,12 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
     <style>
-        /* 1. ANTI-DRAG & ANTI-SELECT (UI/UX Protection) */
         body {
             margin: 0;
             padding: 0;
-            background-color: #000; /* Layar belakang hitam */
+            background-color: #000;
             color: #fff;
             font-family: sans-serif;
-            
-            /* Mencegah member block teks atau tekan lama (long-press) */
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
@@ -24,7 +21,6 @@
             -webkit-touch-callout: none;
         }
 
-        /* 2. STYLE UNTUK GAMBAR KOMIK */
         #comic-container {
             display: flex;
             flex-direction: column;
@@ -35,12 +31,11 @@
             width: 100%;
             max-width: 800px;
             display: block;
-            pointer-events: none; /* Cegah klik & tahan pada gambar */
+            pointer-events: none;
         }
 
-        /* 3. LAYAR ERROR UNTUK PC/BROWSER (Satpam Platform) */
         #error-screen {
-            display: none; /* Disembunyikan secara default */
+            display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background-color: #111;
@@ -52,14 +47,11 @@
             z-index: 99999;
             padding: 20px;
         }
-        #error-screen h1 { font-size: 3em; margin-bottom: 10px; }
-        #error-screen p { font-size: 1.2em; color: #aaa; }
 
-        /* 4. CONTAINER WATERMARK (Melayang di atas komik) */
         #watermark-layer {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; /* Agar tidak menghalangi scroll */
+            pointer-events: none;
             z-index: 9999;
             overflow: hidden;
         }
@@ -69,7 +61,6 @@
             font-weight: bold;
             line-height: 1.2;
             white-space: pre-wrap;
-            /* Teks warna abu-abu agak transparan */
             color: rgba(255, 255, 255, 0.15); 
             text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
         }
@@ -88,75 +79,55 @@
     </div>
 
     <script>
-        // Inisiasi Telegram WebApp
         const tg = window.Telegram.WebApp;
-        tg.expand(); // Perlebar layar penuh
+        tg.expand();
 
-        // ==========================================
-        // 🛡️ FITUR 1: SATPAM PLATFORM (BLOKIR PC)
-        // ==========================================
         const allowedPlatforms = ['android', 'android_x', 'ios'];
         
         if (!allowedPlatforms.includes(tg.platform)) {
-            // Jika dibuka dari PC/Web/Mac, hancurkan konten dan tampilkan error
             document.getElementById('main-content').style.display = 'none';
             document.getElementById('error-screen').style.display = 'flex';
         } else {
-            // ==========================================
-            // 📖 FITUR 2: RENDER GAMBAR DINAMIS
-            // ==========================================
             const urlParams = new URLSearchParams(window.location.search);
             const container = document.getElementById('comic-container');
             
-            // Mengubah Judul Web jika ada parameter title
             if(urlParams.has('title')) {
                 document.title = urlParams.get('title').replace(/_/g, ' ');
             }
 
-            // Loop untuk merender semua gambar dari parameter URL (img0, img1, img2...)
             urlParams.forEach((value, key) => {
                 if (key.startsWith('img')) {
                     const imgElement = document.createElement('img');
                     imgElement.src = value;
-                    imgElement.loading = "lazy"; // Loading dinamis biar tidak berat
+                    imgElement.loading = "lazy";
                     container.appendChild(imgElement);
                 }
             });
 
-            // ==========================================
-            // ⚔️ FITUR 3: WATERMARK 3 BARIS (SENJATA IPHONE)
-            // ==========================================
             const user = tg.initDataUnsafe?.user;
             const usn = user?.username ? `@${user.username}` : `ID:${user?.id || 'Unknown'}`;
             const nama = user?.first_name || 'Member';
-            
-            // Format 3 Baris
             const watermarkText = `MVP\n${usn} ${nama}\nDO NOT REPOST`;
             
             const wmLayer = document.getElementById('watermark-layer');
-            const totalWatermarks = 100; // Cetak 100 kali secara acak
+            const positions = [
+                { top: 15, left: 50 },
+                { top: 40, left: 20 },
+                { top: 65, left: 80 },
+                { top: 90, left: 50 }
+            ];
 
-            for (let i = 0; i < totalWatermarks; i++) {
+            positions.forEach(pos => {
                 const wmDiv = document.createElement('div');
                 wmDiv.className = 'wm-text';
                 wmDiv.innerText = watermarkText;
-
-                // Hitungan Acak
-                const randomTop = Math.random() * 100; // 0% - 100%
-                const randomLeft = Math.random() * 100; // 0% - 100%
-                const randomRotate = (Math.random() * 120) - 60; // -60 derajat s/d 60 derajat
-                const randomSize = Math.floor(Math.random() * 10) + 14; // Font 14px s/d 24px
-                const randomOpacity = (Math.random() * 0.17) + 0.08; // Transparansi 0.08 s/d 0.25
-
-                // Terapkan CSS Acak
-                wmDiv.style.top = `${randomTop}%`;
-                wmDiv.style.left = `${randomLeft}%`;
-                wmDiv.style.transform = `rotate(${randomRotate}deg)`;
-                wmDiv.style.fontSize = `${randomSize}px`;
-                wmDiv.style.opacity = randomOpacity;
-
+                wmDiv.style.top = `${pos.top}%`;
+                wmDiv.style.left = `${pos.left}%`;
+                wmDiv.style.transform = `translate(-50%, -50%) rotate(-25deg)`;
+                wmDiv.style.fontSize = `22px`;
+                wmDiv.style.opacity = `0.15`;
                 wmLayer.appendChild(wmDiv);
-            }
+            });
         }
     </script>
 </body>
