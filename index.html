@@ -4,141 +4,142 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MVP Reader</title>
+    
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
     <style>
         body {
             margin: 0;
             padding: 0;
-            background-color: #000; /* Latar belakang gelap khas VIP */
+            background-color: #000;
             color: #fff;
-            overflow-x: hidden;
-            user-select: none;
+            font-family: sans-serif;
             -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
             -webkit-touch-callout: none;
         }
-        
-        /* Kontainer Komik (Lapis Keamanan Interaksi) */
-        .comic-container {
+
+        #comic-container {
             display: flex;
             flex-direction: column;
             width: 100%;
-            pointer-events: none; /* Gambar kebal sentuhan, tidak bisa di-drag/save */
+            align-items: center;
         }
-        
-        .comic-container img {
+        #comic-container img {
             width: 100%;
+            max-width: 800px;
             display: block;
-            height: auto;
+            pointer-events: none;
         }
 
-        /* Watermark Tunggal (Melayang di pojok kiri bawah, rata kiri, tidak miring) */
-        #watermark {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            text-align: left;
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 14px;
-            font-weight: bold;
-            color: rgba(255, 255, 255, 0.32); /* Opacity tipis agar tidak mengganggu art manhwa */
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.9); /* Bayangan hitam agar tetap terbaca di panel terang */
-            white-space: pre-wrap;
-            pointer-events: none; /* Tembus sentuhan jari saat scroll */
-            z-index: 9999;
-            line-height: 1.4;
-        }
-
-        /* Tampilan Proteksi Satpam Platform */
-        #blocker {
+        #error-screen {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #8b0000; /* Merah tegas */
-            color: white;
+            background-color: #111;
+            color: #ff3333;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             text-align: center;
-            box-sizing: border-box;
-            padding: 50% 20px 0 20px;
-            font-size: 19px;
-            font-family: Arial, sans-serif;
+            z-index: 99999;
+            padding: 20px;
+        }
+
+        #watermark-layer {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            overflow: hidden;
+        }
+        
+        .wm-text {
+            position: absolute;
+            text-align: center;
             font-weight: bold;
-            z-index: 10000;
-            line-height: 1.6;
+            line-height: 1.1; /* Dirapatkan agar tidak makan tempat */
+            white-space: pre-wrap;
+            /* Transparansi ekstrem, sisa 12% saja */
+            color: rgba(255, 255, 255, 0.12); 
+            /* Bayangan super tipis, sekadar pembatas tipis di bg putih */
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.2);
         }
     </style>
 </head>
-<body oncontextmenu="return false;"> <div id="blocker">🛑 AKSES DITOLAK<br><br>Demi keamanan konten MVP, khusus untuk chapter ini hanya dapat diakses melalui aplikasi Telegram di HP Android.</div>
-    
-    <div id="watermark"></div>
-    
-    <div class="comic-container" id="comic-layer"></div>
+<body oncontextmenu="return false;">
+
+    <div id="error-screen">
+        <h1>🛑 AKSES DITOLAK</h1>
+        <p>Keamanan Ekosistem MVP aktif.<br>Komik ini HANYA BISA DIBACA melalui Aplikasi Telegram Resmi di Smartphone (Android/iOS).</p>
+    </div>
+
+    <div id="main-content">
+        <div id="watermark-layer"></div>
+        <div id="comic-container"></div>
+    </div>
 
     <script>
         const tg = window.Telegram.WebApp;
-        tg.ready();
         tg.expand();
 
-        // 1. Ambil Perangkat Pengguna & Parameter URL
-        const platform = tg.platform;
-        const urlParams = new URLSearchParams(window.location.search);
-        const isAndroidOnly = urlParams.get('android_only') === 'true';
-
-        // 2. Sistem Validasi Keamanan Perangkat (Satpam Platform)
         const allowedPlatforms = ['android', 'android_x', 'ios'];
-        let isBlocked = false;
-
-        if (!allowedPlatforms.includes(platform)) {
-            // Blokir otomatis jika dibuka dari browser PC/Laptop atau Telegram Web
-            isBlocked = true;
-        } else if (isAndroidOnly && platform === 'ios') {
-            // Blokir total pengguna iPhone jika mode android_only diset TRUE oleh bot
-            isBlocked = true;
-        }
-
-        // 3. Eksekusi Tampilan Konten
-        if (isBlocked) {
-            document.getElementById('blocker').style.display = 'block';
-            document.getElementById('comic-layer').style.display = 'none';
+        
+        if (!allowedPlatforms.includes(tg.platform)) {
+            document.getElementById('main-content').style.display = 'none';
+            document.getElementById('error-screen').style.display = 'flex';
         } else {
-            // 4. Cetak Watermark 3 Baris Sesuai Request Master
-            const user = tg.initDataUnsafe?.user;
-            const username = user?.username ? `@${user.username}` : "No_Username";
-            const userId = user?.id ? user.id : "ID_Unknown";
-
-            document.getElementById('watermark').innerText = `👑 MVP\n${username} (${userId})\nFree | DO NOT REPOST`;
-
-            // 5. LOGIKA RENDER GAMBAR (YANG KEMARIN KETINGGALAN 🛠️)
-            const container = document.getElementById('comic-layer');
+            const urlParams = new URLSearchParams(window.location.search);
+            const container = document.getElementById('comic-container');
             
-            // Mencari data gambar dari beberapa variasi parameter parameter bot (anti-gagal)
-            const imagesData = urlParams.get('images') || urlParams.get('urls') || urlParams.get('imgs');
-            
-            if (imagesData) {
-                // Pola A: Jika bot mengirim kumpulan URL dalam satu parameter dipisahkan koma
-                const imageUrls = imagesData.split(',');
-                imageUrls.forEach(url => {
-                    if (url.trim()) {
-                        const img = document.createElement('img');
-                        img.src = decodeURIComponent(url.trim());
-                        container.appendChild(img);
-                    }
-                });
-            } else {
-                // Pola B: Deteksi otomatis jika bot mengirimkan URL gambar secara mandiri/individual
-                let foundImages = false;
-                for (let [key, value] of urlParams.entries()) {
-                    if (value.startsWith('http://') || value.startsWith('https://')) {
-                        const img = document.createElement('img');
-                        img.src = decodeURIComponent(value);
-                        container.appendChild(img);
-                        foundImages = true;
-                    }
-                }
-                
-                // Jika tidak terdeteksi link gambar sama sekali
-                if (!foundImages) {
-                    container.innerHTML = "<p style='text-align:center; padding: 50px 20px; color: #555; font-family: Arial;'>Gagal memuat panel komik. Pastikan bot mengirimkan data parameter URL gambar dengan benar.</p>";
-                }
+            if(urlParams.has('title')) {
+                document.title = urlParams.get('title').replace(/_/g, ' ');
             }
+
+            urlParams.forEach((value, key) => {
+                if (key.startsWith('img')) {
+                    const imgElement = document.createElement('img');
+                    imgElement.src = value;
+                    imgElement.loading = "lazy";
+                    container.appendChild(imgElement);
+                }
+            });
+
+            // ==========================================
+            // ⚔️ FORMAT WATERMARK (VERSI SUPER HALUS)
+            // ==========================================
+            const user = tg.initDataUnsafe?.user;
+            
+            const usn = user?.username ? `@${user.username}` : 'NoUsername';
+            const userId = user?.id || 'UnknownID';
+            
+            const watermarkText = `👑\nMVP\n${usn} | ${userId}\nDO NOT REPOST`;
+            
+            const wmLayer = document.getElementById('watermark-layer');
+            
+            const positions = [
+                { top: 15, left: 50 },
+                { top: 40, left: 20 },
+                { top: 65, left: 80 },
+                { top: 90, left: 50 }
+            ];
+
+            positions.forEach(pos => {
+                const wmDiv = document.createElement('div');
+                wmDiv.className = 'wm-text';
+                wmDiv.innerText = watermarkText;
+                
+                wmDiv.style.top = `${pos.top}%`;
+                wmDiv.style.left = `${pos.left}%`;
+                wmDiv.style.transform = `translate(-50%, -50%) rotate(-20deg)`;
+                
+                // Ukuran font diperkecil jadi mirip stempel kecil
+                wmDiv.style.fontSize = `15px`; 
+                
+                wmLayer.appendChild(wmDiv);
+            });
         }
     </script>
 </body>
