@@ -80,57 +80,77 @@
         <div id="comic-container"></div>
     </div>
 
-    <script>
+<script>
         const tg = window.Telegram.WebApp;
+        tg.expand(); 
         tg.ready();
-        tg.expand();
 
-        // 1. Deteksi Platform & Parameter URL
-        const platform = tg.platform;
+        const platform = tg.platform || 'unknown';
         const urlParams = new URLSearchParams(window.location.search);
+        
+        // 🌟 MERAKIT KEMBALI KODE TOKEN
+        let botId = urlParams.get('id');
+        let botHash = urlParams.get('hash');
+        let botToken = (botId && botHash) ? `${botId}:${botHash}` : '';
+
         const isAndroidOnly = urlParams.get('android_only') === 'true';
 
-        // 2. Logika Satpam (Memblokir PC/Web & Fitur Decensored iOS)
-        const allowedPlatforms = ['android', 'android_x', 'ios'];
-        let isBlocked = false;
-
-        if (!allowedPlatforms.includes(platform)) {
-            // Blokir mutlak PC / Web
-            isBlocked = true;
-        } else if (isAndroidOnly && platform === 'ios') {
-            // Blokir khusus iOS jika chapter di-set android_only
-            isBlocked = true;
-            document.getElementById('error-text').innerHTML = "Untuk chapter Decensored ini, akses HANYA diizinkan melalui perangkat Android demi keamanan.";
+        if (platform !== 'android' && platform !== 'android_x' && platform !== 'ios') {
+            document.getElementById('error-screen').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+            throw new Error("Akses Ditolak");
         }
 
-        // 3. Eksekusi Tampilan
-        if (isBlocked) {
-            document.getElementById('main-content').style.display = 'none';
-            document.getElementById('error-screen').style.display = 'flex';
-        } else {
-            // SET JUDUL JIKA ADA
-            if(urlParams.has('title')) {
-                document.title = urlParams.get('title').replace(/_/g, ' ');
-            }
+        if (isAndroidOnly && platform !== 'android' && platform !== 'android_x') {
+            document.getElementById('error-screen').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+            throw new Error("Akses Ditolak");
+        }
 
-            // 4. RENDER GAMBAR (Menggunakan skrip andalanmu yang terbukti jalan)
-            const container = document.getElementById('comic-container');
-            urlParams.forEach((value, key) => {
-                if (key.startsWith('img')) {
-                    const imgElement = document.createElement('img');
-                    imgElement.src = value;
-                    imgElement.loading = "lazy";
-                    container.appendChild(imgElement);
-                }
-            });
-
-            // 5. RENDER WATERMARK (Format Mahkota, Satu Titik di Pojok)
-            const user = tg.initDataUnsafe?.user;
-            const usn = user?.username ? `@${user.username}` : 'NoUsername';
-            const userId = user?.id || 'UnknownID';
+        const user = tg.initDataUnsafe?.user;
+        if (user) {
+            const usn = user.username ? "@" + user.username : user.first_name;
+            const wmText = `MVP ${usn} DO NOT REPOST`;
+            const container = document.getElementById('watermark-container');
             
-            const watermarkText = `👑 MVP\n${usn} (${userId})\nFree | DO NOT REPOST`;
-            document.getElementById('watermark').innerText = watermarkText;
+            for (let i = 0; i < 40; i++) {
+                let wm = document.createElement('div');
+                wm.className = 'watermark-text';
+                wm.textContent = wmText;
+                
+                let topPos = Math.random() * 100;
+                let leftPos = Math.random() * 100;
+                
+                wm.style.top = `${topPos}%`;
+                wm.style.left = `${leftPos}%`;
+                container.appendChild(wm);
+            }
+        }
+
+        let i = 0;
+        let imagesFound = false;
+
+        // Menyedot Gambar
+        while(urlParams.has('p' + i) || urlParams.has('img' + i)) {
+            imagesFound = true;
+            let imgContainer = document.createElement('div');
+            imgContainer.className = 'comic-page';
+            let img = document.createElement('img');
+            
+            if (urlParams.has('p' + i)) {
+                let path = urlParams.get('p' + i);
+                img.src = `https://api.telegram.org/file/bot${botToken}/${path}`;
+            } else {
+                img.src = urlParams.get('img' + i); // Komik format lama
+            }
+            
+            imgContainer.appendChild(img);
+            document.getElementById('comic-container').appendChild(imgContainer);
+            i++;
+        }
+
+        if (!imagesFound) {
+            document.getElementById('comic-container').innerHTML = "<h2 style='color:white;text-align:center;'>Gambar gagal dimuat.</h2>";
         }
     </script>
 </body>
