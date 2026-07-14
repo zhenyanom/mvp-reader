@@ -9,7 +9,7 @@
         body {
             margin: 0;
             padding: 0;
-            background-color: #000; /* Latar gelap */
+            background-color: #000; /* Latar belakang gelap khas VIP */
             color: #fff;
             overflow-x: hidden;
             user-select: none;
@@ -17,91 +17,128 @@
             -webkit-touch-callout: none;
         }
         
-        /* Kontainer Komik (Lapis 1 Keamanan) */
+        /* Kontainer Komik (Lapis Keamanan Interaksi) */
         .comic-container {
             display: flex;
             flex-direction: column;
             width: 100%;
-            pointer-events: none; /* Membuat gambar kebal sentuhan/drag */
+            pointer-events: none; /* Gambar kebal sentuhan, tidak bisa di-drag/save */
         }
         
         .comic-container img {
             width: 100%;
             display: block;
+            height: auto;
         }
 
-        /* Watermark Baru (Satu titik, melayang, rata kiri) */
+        /* Watermark Tunggal (Melayang di pojok kiri bawah, rata kiri, tidak miring) */
         #watermark {
             position: fixed;
-            bottom: 15px;
-            left: 15px;
+            bottom: 20px;
+            left: 20px;
             text-align: left;
-            font-family: Arial, sans-serif;
-            font-size: 13px; /* Ukuran pas agar tidak mengganggu */
-            color: rgba(255, 255, 255, 0.35); /* Transparansi (Opacity) */
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.8); /* Outline hitam tipis agar terbaca di gambar terang */
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            font-weight: bold;
+            color: rgba(255, 255, 255, 0.32); /* Opacity tipis agar tidak mengganggu art manhwa */
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.9); /* Bayangan hitam agar tetap terbaca di panel terang */
             white-space: pre-wrap;
-            pointer-events: none; /* Melayang dan tembus jari */
+            pointer-events: none; /* Tembus sentuhan jari saat scroll */
             z-index: 9999;
+            line-height: 1.4;
         }
 
-        /* Layar Satpam (Blocker) */
+        /* Tampilan Proteksi Satpam Platform */
         #blocker {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #aa0000; /* Merah gelap */
+            background-color: #8b0000; /* Merah tegas */
             color: white;
             text-align: center;
-            padding-top: 50%;
-            font-size: 20px;
+            box-sizing: border-box;
+            padding: 50% 20px 0 20px;
+            font-size: 19px;
             font-family: Arial, sans-serif;
+            font-weight: bold;
             z-index: 10000;
+            line-height: 1.6;
         }
     </style>
 </head>
-<body oncontextmenu="return false;"> <div id="blocker">🛑 AKSES DITOLAK<br><br>Demi keamanan konten MVP, silakan akses chapter ini melalui aplikasi Telegram di HP Android.</div>
+<body oncontextmenu="return false;"> <div id="blocker">🛑 AKSES DITOLAK<br><br>Demi keamanan konten MVP, khusus untuk chapter ini hanya dapat diakses melalui aplikasi Telegram di HP Android.</div>
     
     <div id="watermark"></div>
     
-    <div class="comic-container" id="comic-layer">
-        </div>
+    <div class="comic-container" id="comic-layer"></div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
 
-        // 1. Deteksi Perangkat & Parameter URL
+        // 1. Ambil Perangkat Pengguna & Parameter URL
         const platform = tg.platform;
         const urlParams = new URLSearchParams(window.location.search);
         const isAndroidOnly = urlParams.get('android_only') === 'true';
 
-        // 2. Logika Satpam Platform
+        // 2. Sistem Validasi Keamanan Perangkat (Satpam Platform)
         const allowedPlatforms = ['android', 'android_x', 'ios'];
         let isBlocked = false;
 
         if (!allowedPlatforms.includes(platform)) {
-            // Blokir mutlak untuk PC (Windows/Mac) dan Web Browser
-            isBlocked = true; 
+            // Blokir otomatis jika dibuka dari browser PC/Laptop atau Telegram Web
+            isBlocked = true;
         } else if (isAndroidOnly && platform === 'ios') {
-            // Blokir khusus iPhone/iOS jika mode android_only menyala
-            isBlocked = true; 
+            // Blokir total pengguna iPhone jika mode android_only diset TRUE oleh bot
+            isBlocked = true;
         }
 
-        // 3. Eksekusi Tampilan Layar
+        // 3. Eksekusi Tampilan Konten
         if (isBlocked) {
             document.getElementById('blocker').style.display = 'block';
             document.getElementById('comic-layer').style.display = 'none';
         } else {
-            // 4. Eksekusi Watermark Tunggal
+            // 4. Cetak Watermark 3 Baris Sesuai Request Master
             const user = tg.initDataUnsafe?.user;
             const username = user?.username ? `@${user.username}` : "No_Username";
             const userId = user?.id ? user.id : "ID_Unknown";
 
-            // Merakit teks 3 baris sesuai permintaanmu
-            const wmText = `👑 MVP\n${username} (${userId})\nFree | DO NOT REPOST`;
-            document.getElementById('watermark').innerText = wmText;
+            document.getElementById('watermark').innerText = `👑 MVP\n${username} (${userId})\nFree | DO NOT REPOST`;
+
+            // 5. LOGIKA RENDER GAMBAR (YANG KEMARIN KETINGGALAN 🛠️)
+            const container = document.getElementById('comic-layer');
+            
+            // Mencari data gambar dari beberapa variasi parameter parameter bot (anti-gagal)
+            const imagesData = urlParams.get('images') || urlParams.get('urls') || urlParams.get('imgs');
+            
+            if (imagesData) {
+                // Pola A: Jika bot mengirim kumpulan URL dalam satu parameter dipisahkan koma
+                const imageUrls = imagesData.split(',');
+                imageUrls.forEach(url => {
+                    if (url.trim()) {
+                        const img = document.createElement('img');
+                        img.src = decodeURIComponent(url.trim());
+                        container.appendChild(img);
+                    }
+                });
+            } else {
+                // Pola B: Deteksi otomatis jika bot mengirimkan URL gambar secara mandiri/individual
+                let foundImages = false;
+                for (let [key, value] of urlParams.entries()) {
+                    if (value.startsWith('http://') || value.startsWith('https://')) {
+                        const img = document.createElement('img');
+                        img.src = decodeURIComponent(value);
+                        container.appendChild(img);
+                        foundImages = true;
+                    }
+                }
+                
+                // Jika tidak terdeteksi link gambar sama sekali
+                if (!foundImages) {
+                    container.innerHTML = "<p style='text-align:center; padding: 50px 20px; color: #555; font-family: Arial;'>Gagal memuat panel komik. Pastikan bot mengirimkan data parameter URL gambar dengan benar.</p>";
+                }
+            }
         }
     </script>
 </body>
