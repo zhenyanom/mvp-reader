@@ -4,142 +4,104 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MVP Reader</title>
-    
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
     <style>
         body {
             margin: 0;
             padding: 0;
-            background-color: #000;
+            background-color: #000; /* Latar gelap */
             color: #fff;
-            font-family: sans-serif;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
+            overflow-x: hidden;
             user-select: none;
+            -webkit-user-select: none;
             -webkit-touch-callout: none;
         }
-
-        #comic-container {
+        
+        /* Kontainer Komik (Lapis 1 Keamanan) */
+        .comic-container {
             display: flex;
             flex-direction: column;
             width: 100%;
-            align-items: center;
+            pointer-events: none; /* Membuat gambar kebal sentuhan/drag */
         }
-        #comic-container img {
+        
+        .comic-container img {
             width: 100%;
-            max-width: 800px;
             display: block;
-            pointer-events: none;
         }
 
-        #error-screen {
+        /* Watermark Baru (Satu titik, melayang, rata kiri) */
+        #watermark {
+            position: fixed;
+            bottom: 15px;
+            left: 15px;
+            text-align: left;
+            font-family: Arial, sans-serif;
+            font-size: 13px; /* Ukuran pas agar tidak mengganggu */
+            color: rgba(255, 255, 255, 0.35); /* Transparansi (Opacity) */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8); /* Outline hitam tipis agar terbaca di gambar terang */
+            white-space: pre-wrap;
+            pointer-events: none; /* Melayang dan tembus jari */
+            z-index: 9999;
+        }
+
+        /* Layar Satpam (Blocker) */
+        #blocker {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #111;
-            color: #ff3333;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            background-color: #aa0000; /* Merah gelap */
+            color: white;
             text-align: center;
-            z-index: 99999;
-            padding: 20px;
-        }
-
-        #watermark-layer {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 9999;
-            overflow: hidden;
-        }
-        
-        .wm-text {
-            position: absolute;
-            text-align: center;
-            font-weight: bold;
-            line-height: 1.1; /* Dirapatkan agar tidak makan tempat */
-            white-space: pre-wrap;
-            /* Transparansi ekstrem, sisa 12% saja */
-            color: rgba(255, 255, 255, 0.12); 
-            /* Bayangan super tipis, sekadar pembatas tipis di bg putih */
-            text-shadow: 1px 1px 1px rgba(0,0,0,0.2);
+            padding-top: 50%;
+            font-size: 20px;
+            font-family: Arial, sans-serif;
+            z-index: 10000;
         }
     </style>
 </head>
-<body oncontextmenu="return false;">
-
-    <div id="error-screen">
-        <h1>🛑 AKSES DITOLAK</h1>
-        <p>Keamanan Ekosistem MVP aktif.<br>Komik ini HANYA BISA DIBACA melalui Aplikasi Telegram Resmi di Smartphone (Android/iOS).</p>
-    </div>
-
-    <div id="main-content">
-        <div id="watermark-layer"></div>
-        <div id="comic-container"></div>
-    </div>
+<body oncontextmenu="return false;"> <div id="blocker">🛑 AKSES DITOLAK<br><br>Demi keamanan konten MVP, silakan akses chapter ini melalui aplikasi Telegram di HP Android.</div>
+    
+    <div id="watermark"></div>
+    
+    <div class="comic-container" id="comic-layer">
+        </div>
 
     <script>
         const tg = window.Telegram.WebApp;
+        tg.ready();
         tg.expand();
 
+        // 1. Deteksi Perangkat & Parameter URL
+        const platform = tg.platform;
+        const urlParams = new URLSearchParams(window.location.search);
+        const isAndroidOnly = urlParams.get('android_only') === 'true';
+
+        // 2. Logika Satpam Platform
         const allowedPlatforms = ['android', 'android_x', 'ios'];
-        
-        if (!allowedPlatforms.includes(tg.platform)) {
-            document.getElementById('main-content').style.display = 'none';
-            document.getElementById('error-screen').style.display = 'flex';
+        let isBlocked = false;
+
+        if (!allowedPlatforms.includes(platform)) {
+            // Blokir mutlak untuk PC (Windows/Mac) dan Web Browser
+            isBlocked = true; 
+        } else if (isAndroidOnly && platform === 'ios') {
+            // Blokir khusus iPhone/iOS jika mode android_only menyala
+            isBlocked = true; 
+        }
+
+        // 3. Eksekusi Tampilan Layar
+        if (isBlocked) {
+            document.getElementById('blocker').style.display = 'block';
+            document.getElementById('comic-layer').style.display = 'none';
         } else {
-            const urlParams = new URLSearchParams(window.location.search);
-            const container = document.getElementById('comic-container');
-            
-            if(urlParams.has('title')) {
-                document.title = urlParams.get('title').replace(/_/g, ' ');
-            }
-
-            urlParams.forEach((value, key) => {
-                if (key.startsWith('img')) {
-                    const imgElement = document.createElement('img');
-                    imgElement.src = value;
-                    imgElement.loading = "lazy";
-                    container.appendChild(imgElement);
-                }
-            });
-
-            // ==========================================
-            // ⚔️ FORMAT WATERMARK (VERSI SUPER HALUS)
-            // ==========================================
+            // 4. Eksekusi Watermark Tunggal
             const user = tg.initDataUnsafe?.user;
-            
-            const usn = user?.username ? `@${user.username}` : 'NoUsername';
-            const userId = user?.id || 'UnknownID';
-            
-            const watermarkText = `👑\nMVP\n${usn} | ${userId}\nDO NOT REPOST`;
-            
-            const wmLayer = document.getElementById('watermark-layer');
-            
-            const positions = [
-                { top: 15, left: 50 },
-                { top: 40, left: 20 },
-                { top: 65, left: 80 },
-                { top: 90, left: 50 }
-            ];
+            const username = user?.username ? `@${user.username}` : "No_Username";
+            const userId = user?.id ? user.id : "ID_Unknown";
 
-            positions.forEach(pos => {
-                const wmDiv = document.createElement('div');
-                wmDiv.className = 'wm-text';
-                wmDiv.innerText = watermarkText;
-                
-                wmDiv.style.top = `${pos.top}%`;
-                wmDiv.style.left = `${pos.left}%`;
-                wmDiv.style.transform = `translate(-50%, -50%) rotate(-20deg)`;
-                
-                // Ukuran font diperkecil jadi mirip stempel kecil
-                wmDiv.style.fontSize = `15px`; 
-                
-                wmLayer.appendChild(wmDiv);
-            });
+            // Merakit teks 3 baris sesuai permintaanmu
+            const wmText = `👑 MVP\n${username} (${userId})\nFree | DO NOT REPOST`;
+            document.getElementById('watermark').innerText = wmText;
         }
     </script>
 </body>
