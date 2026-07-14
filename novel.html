@@ -239,8 +239,7 @@
         </div>
     </div>
 
-    <script>
-        // 1. Inisialisasi Telegram Web App
+<script>
         const tg = window.Telegram.WebApp;
         tg.expand(); 
         tg.ready();
@@ -249,7 +248,6 @@
         const errorScreen = document.getElementById('error-screen');
         const outer = document.getElementById('binder-outer');
         
-        // Blokir PC/Browser
         if (platform !== 'android' && platform !== 'android_x' && platform !== 'ios') {
             errorScreen.style.display = 'block';
             outer.style.display = 'none';
@@ -257,7 +255,6 @@
             throw new Error("Akses PC Ditolak.");
         }
 
-        // 2. Set Info Member di Watermark
         const user = tg.initDataUnsafe?.user;
         if (user) {
             const usn = user.username ? "@" + user.username : user.first_name;
@@ -265,20 +262,22 @@
             document.getElementById('wm-id').textContent = user.id;
         }
 
-        // 3. Mengambil Judul dari URL (Ubah _ jadi Spasi)
         const urlParams = new URLSearchParams(window.location.search);
         let titleParam = urlParams.get('title') || 'NOVEL MVP';
         titleParam = titleParam.replace(/_/g, ' '); 
         document.getElementById('novel-title').textContent = titleParam;
 
-        // 4. Tombol Refresh Y2K (Merapikan query string & timestamp)
         document.getElementById('refresh-btn-y2k').onclick = () => {
             let refreshParams = new URLSearchParams(window.location.search);
-            refreshParams.set('t', Date.now()); // Update stempel waktu
+            refreshParams.set('t', Date.now()); 
             window.location.search = refreshParams.toString();
         };
 
-        // 5. Mengambil file .txt dan menampilkannya pas di garis kertas
+        // 🌟 MERAKIT KEMBALI KODE TOKEN
+        let botId = urlParams.get('id');
+        let botHash = urlParams.get('hash');
+        let botToken = (botId && botHash) ? `${botId}:${botHash}` : '';
+
         async function loadNovelText() {
             const contentArea = document.getElementById('content-area');
             const loadingText = document.getElementById('loading');
@@ -286,9 +285,9 @@
             let txtUrls = [];
             let i = 0;
             
-            // Bot Zhenya mengirim file dengan parameter txt0, txt1, dst.
-            while(urlParams.has('txt' + i)) {
-                txtUrls.push(urlParams.get('txt' + i));
+            while(urlParams.has('p' + i)) {
+                let path = urlParams.get('p' + i);
+                txtUrls.push(`https://api.telegram.org/file/bot${botToken}/${path}`);
                 i++;
             }
 
@@ -298,36 +297,30 @@
             }
 
             let fullText = "";
-
-            // Fetch semua isi file .txt
             for(let url of txtUrls) {
                 try {
                     let response = await fetch(url);
                     if (response.ok) {
                         let text = await response.text();
-                        fullText += text + "\n\n"; // Gabung teks
+                        fullText += text + "\n\n";
                     }
                 } catch (e) { console.error("Gagal memuat teks:", e); }
             }
 
-            // Keamanan: Ubah HTML jadi teks biasa (Anti-XSS)
             let safeText = fullText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            
-            // Ubah enter di .txt menjadi paragraf web
             let paragraphs = safeText.split('\n');
-            loadingText.style.display = 'none'; // Sembunyikan loading
+            loadingText.style.display = 'none';
 
             paragraphs.forEach(para => {
                 let trimmed = para.trim();
                 if (trimmed.length > 0) {
                     let pTag = document.createElement('p');
                     pTag.className = 'novel-paragraph';
-                    pTag.textContent = trimmed; // Masukkan teks murni
+                    pTag.textContent = trimmed; 
                     contentArea.appendChild(pTag);
                 }
             });
         }
-
         loadNovelText();
     </script>
 </body>
