@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MVP Novel Binder</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Modak&family=Coiny&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ==========================================
+           TEMA Y2K BINDER LUCU 2000an
+           ========================================== */
+        body {
+            margin: 0;
+            padding: 0;
+            /* Background Pola Daisy Pastel Y2K */
+            background-color: #fce3e7;
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIj48ZyBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC41Ij48cGF0aCBkPSJNMTAgMTBhNSA1IDAgMTAwLTEwIDUgNSAwIDAwMCAxMHptMCA4YTkgOSAwIDEwMC0xOCA5IDkgMCAwMDAgMTh6bTIwIDBhNSA1IDAgMTAwLTEwIDUgNSAwIDAwMCAxMHptMCA4YTkgOSAwIDEwMC0xOCA5IDkgMCAwMDAgMTh6TTEwIDMwYTUgNSAwIDEwMC0xMCA1IDUgMCAwMDAgMTB6bTAgOGE5IDkgMCAxMDAtMTggOSA5IDAgMDAwIDE4em0yMCAwYTUgNSAwIDEwMC0xMCA1IDUgMCAwMDAgMTB6bTAgOGE5IDkgMCAxMDAtMTggOSA5IDAgMDAwIDE4eiIvPjwvZz48L2c+PC9zdmc+');
+            color: #333;
+            font-family: 'Georgia', serif; 
+            font-size: 16px;
+            line-height: 1.8;
+            
+            /* Anti Copas */
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        /* WADAH UTAMA STRUKTUR BINDER */
+        #binder-outer {
+            max-width: 800px;
+            margin: 15px auto;
+            padding: 0 10px 90px 10px; /* Jarak bawah buat chibi */
+            display: flex;
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        /* EFEK CINCIN BINDER DI KIRI */
+        #binder-rings {
+            width: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            padding: 40px 0;
+            position: sticky;
+            top: 20px;
+            height: 80vh;
+        }
+        .ring {
+            width: 25px;
+            height: 25px;
+            background: linear-gradient(135deg, #eee 0%, #aaa 100%);
+            border-radius: 50%;
+            border: 3px solid #ccc;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        /* Lubang kertas */
+        .ring::after {
+            content: '';
+            position: absolute;
+            top: 5px; left: 5px; width: 10px; height: 10px;
+            background-color: #fff;
+            border-radius: 50%;
+            border: 2px solid #999;
+        }
+
+        /* HALAMAN KERTAS BINDER */
+        #novel-container {
+            flex: 1;
+            background-color: #fff;
+            /* Efek Kertas Bergaris */
+            background-image: linear-gradient(#e1e1e1 1px, transparent 1px);
+            background-size: 100% 2em; /* Jarak garis sesuaikan dengan font */
+            background-attachment: local;
+            border-radius: 12px;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.1);
+            padding: 20px 25px 40px 25px;
+            border-left: 10px solid #ff758c; /* "Sampul" plastic warna */
+            position: relative;
+        }
+
+        /* AREA HEADER (LOGO & JUDUL) */
+        .binder-header {
+            text-align: center;
+            border-bottom: 3px dashed #d84b6b;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+
+        /* 🖼️ [PLACEHOLDER LOGO MASTER] 🖼️ */
+        #mvp-logo {
+            max-width: 120px;
+            height: auto;
+            margin-bottom: 10px;
+            /* Hapus background-color jika logo asli sudah ada */
+            background-color: #ccc; 
+            padding: 5px; border-radius: 5px;
+        }
+
+        /* Font Judul Bubbly (Gelembung Y2K) */
+        .novel-title {
+            font-family: 'Modak', cursive; /* Font Y2K */
+            color: #d84b6b;
+            font-size: 32px;
+            letter-spacing: 2px;
+            -webkit-text-stroke: 1px #fff;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        /* AREA TEKS NOVEL */
+        #content-area {
+            /* Pastikan teks novel nempel pas di atas garis-garis kertas */
+            padding-top: 0.2em; 
+        }
+        .novel-paragraph {
+            margin: 0 0 1.25em 0; /* Padding bawah agar teks lurus dengan garis */
+            text-align: justify;
+            color: #444; /* Sedikit soft dari hitam murni */
+        }
+
+        /* 💖 FOOTER CHIBI (ZHENYA & TAEKJOO) 💖 */
+        #chibi-footer {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            max-width: 800px;
+            width: 100%;
+            height: 90px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            padding: 0 10px;
+            box-sizing: border-box;
+            z-index: 100;
+            pointer-events: none; /* Klik tembus ke teks */
+        }
+        .chibi {
+            width: 80px; /* Ukuran chibi disesuaikan */
+            height: auto;
+            /* Hapus background-color jika chibi asli sudah ada */
+            background-color: #aaa; 
+            border-radius: 10px 10px 0 0;
+            margin: 0 15px;
+        }
+
+        /* WATERMARK MELAYANG */
+        #watermark-layer {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0.4;
+            color: #999;
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        /* TOMBOL REFRESH Y2K */
+        #refresh-btn-y2k {
+            font-family: 'Coiny', cursive;
+            background: linear-gradient(135deg, #ff758c 0%, #ff7eb3 100%);
+            color: white;
+            border: 3px solid #fff;
+            border-radius: 15px;
+            padding: 8px 15px;
+            cursor: pointer;
+            box-shadow: 3px 3px 0px rgba(0,0,0,0.2);
+            text-shadow: 1px 1px 0px rgba(0,0,0,0.1);
+            margin-top: 30px;
+        }
+
+        /* LAYAR ERROR Y2K */
+        #error-screen {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #ff758c; 
+            color: white;
+            z-index: 9999;
+            text-align: center;
+            padding-top: 40%;
+            font-family: 'Modak', cursive;
+        }
+        #error-screen h1 { font-size: 36px; -webkit-text-stroke: 1px #fff; }
+        
+        /* Loading Y2K */
+        #loading {
+            text-align: center;
+            padding-top: 50px;
+            font-family: 'Coiny', cursive;
+            color: #d84b6b;
+        }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <div id="error-screen">
+        <h1>🛑 AKSES DITOLAK! 🛑</h1>
+        <p style="font-family: Arial, sans-serif;">Gunakan HP (Android/iOS) biar binder lucunya kelihatan, Master! PC diblokir.</p>
+    </div>
+
+    <div id="chibi-footer">
+        <img src="chibi_zhenya.png" alt="Zhenya Chibi" class="chibi" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSI5MCI+PHJlY3Qgd2lkdGg9Ijc4IiBoZWlnaHQ9Ijg4IiB4PSIxIiB5PSIxIiByeD0iOSIgZmlsbD0iI2FhYSIvPjx0ZXh0IHg9IjQwIiB5PSI1MCIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+WiBDSElCSTwvdGV4dD48L3N2Zz4='">
+        
+        <img src="chibi_taekjoo.png" alt="Taekjoo Chibi" class="chibi" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSI5MCI+PHJlY3Qgd2lkdGg9Ijc4IiBoZWlnaHQ9Ijg4IiB4PSIxIiB5PSIxIiByeD0iOSIgZmlsbD0iI2FhYSIvPjx0ZXh0IHg9IjQwIiB5PSI1MCIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+VCBDSElCSTwvdGV4dD48L3N2Zz4='">
+    </div>
+
+    <div id="binder-outer">
+        <div id="binder-rings">
+            <div class="ring"></div><div class="ring"></div><div class="ring"></div>
+            <div class="ring"></div><div class="ring"></div><div class="ring"></div>
+        </div>
+
+        <div id="novel-container">
+            <div class="binder-header">
+                <img src="logo.png" alt="Logo MVP" id="mvp-logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iNDAiPjxyZWN0IHdpZHRoPSIxMTgiIGhlaWdodD0iMzgiIHg9IjEiIHk9IjEiIHJ4PSI0IiBmaWxsPSIjY2NjIi8+PHRleHQgeD0iNjAiIHk9IjI1IiBmaWxsPSJ3aGl0ZSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5MVFAgTE9HTzwvdGV4dD48L3N2Zz4='">
+                <div class="novel-title" id="novel-title">MEMUAT JUDUL...</div>
+            </div>
+
+            <div id="loading">Menyedot Lembaran Novel... ⏳</div>
+            <div id="content-area"></div>
+            
+            <center><button id="refresh-btn-y2k">🔄 Refresh Teks Blank</button></center>
+            
+            <div id="watermark-layer">
+                👑 MVP <span id="wm-usn">@username</span> (<span id="wm-id">ID</span>)<br>Free | DO NOT REPOST
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 1. Inisialisasi Telegram Web App
+        const tg = window.Telegram.WebApp;
+        tg.expand(); 
+        tg.ready();
+
+        const platform = tg.platform || 'unknown';
+        const errorScreen = document.getElementById('error-screen');
+        const outer = document.getElementById('binder-outer');
+        
+        // Blokir PC/Browser
+        if (platform !== 'android' && platform !== 'android_x' && platform !== 'ios') {
+            errorScreen.style.display = 'block';
+            outer.style.display = 'none';
+            document.body.style.overflow = 'hidden';
+            throw new Error("Akses PC Ditolak.");
+        }
+
+        // 2. Set Info Member di Watermark
+        const user = tg.initDataUnsafe?.user;
+        if (user) {
+            const usn = user.username ? "@" + user.username : user.first_name;
+            document.getElementById('wm-usn').textContent = usn;
+            document.getElementById('wm-id').textContent = user.id;
+        }
+
+        // 3. Mengambil Judul dari URL (Ubah _ jadi Spasi)
+        const urlParams = new URLSearchParams(window.location.search);
+        let titleParam = urlParams.get('title') || 'NOVEL MVP';
+        titleParam = titleParam.replace(/_/g, ' '); 
+        document.getElementById('novel-title').textContent = titleParam;
+
+        // 4. Tombol Refresh Y2K (Merapikan query string & timestamp)
+        document.getElementById('refresh-btn-y2k').onclick = () => {
+            let refreshParams = new URLSearchParams(window.location.search);
+            refreshParams.set('t', Date.now()); // Update stempel waktu
+            window.location.search = refreshParams.toString();
+        };
+
+        // 5. Mengambil file .txt dan menampilkannya pas di garis kertas
+        async function loadNovelText() {
+            const contentArea = document.getElementById('content-area');
+            const loadingText = document.getElementById('loading');
+            
+            let txtUrls = [];
+            let i = 0;
+            
+            // Bot Zhenya mengirim file dengan parameter txt0, txt1, dst.
+            while(urlParams.has('txt' + i)) {
+                txtUrls.push(urlParams.get('txt' + i));
+                i++;
+            }
+
+            if (txtUrls.length === 0) {
+                loadingText.textContent = "⚠️ Tidak ada lembaran teks yang ditemukan.";
+                return;
+            }
+
+            let fullText = "";
+
+            // Fetch semua isi file .txt
+            for(let url of txtUrls) {
+                try {
+                    let response = await fetch(url);
+                    if (response.ok) {
+                        let text = await response.text();
+                        fullText += text + "\n\n"; // Gabung teks
+                    }
+                } catch (e) { console.error("Gagal memuat teks:", e); }
+            }
+
+            // Keamanan: Ubah HTML jadi teks biasa (Anti-XSS)
+            let safeText = fullText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            
+            // Ubah enter di .txt menjadi paragraf web
+            let paragraphs = safeText.split('\n');
+            loadingText.style.display = 'none'; // Sembunyikan loading
+
+            paragraphs.forEach(para => {
+                let trimmed = para.trim();
+                if (trimmed.length > 0) {
+                    let pTag = document.createElement('p');
+                    pTag.className = 'novel-paragraph';
+                    pTag.textContent = trimmed; // Masukkan teks murni
+                    contentArea.appendChild(pTag);
+                }
+            });
+        }
+
+        loadNovelText();
+    </script>
+</body>
+</html>
