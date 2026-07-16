@@ -5,11 +5,6 @@
 
         const platform = tg.platform || 'unknown';
         const urlParams = new URLSearchParams(window.location.search);
-        
-        // 🌟 PEMBONGKAR SANDI REVERSE BASE64
-        let tk = urlParams.get('tk');
-        let botToken = tk ? atob(tk.split('').reverse().join('')) : '';
-
         const isAndroidOnly = urlParams.get('android_only') === 'true';
 
         if (platform !== 'android' && platform !== 'android_x' && platform !== 'ios') {
@@ -44,36 +39,23 @@
             }
         }
 
+        // KEMBALI MENGGUNAKAN VERSI STABIL
+        let i = 0;
         let imagesFound = false;
-        let pStr = urlParams.get('p');
-        
-        if (pStr) {
+
+        while(urlParams.has('img' + i)) {
             imagesFound = true;
-            let paths = pStr.split(',');
-            for (let path of paths) {
-                let imgContainer = document.createElement('div');
-                imgContainer.className = 'comic-page';
-                let img = document.createElement('img');
-                img.src = `https://api.telegram.org/file/bot${botToken}/${path}`;
-                imgContainer.appendChild(img);
-                document.getElementById('comic-container').appendChild(imgContainer);
-            }
-        } else {
-            // Jaga-jaga jika tombol komik lama (versi img0, img1) diklik
-            let i = 0;
-            while(urlParams.has('img' + i)) {
-                imagesFound = true;
-                let imgContainer = document.createElement('div');
-                imgContainer.className = 'comic-page';
-                let img = document.createElement('img');
-                img.src = urlParams.get('img' + i);
-                imgContainer.appendChild(img);
-                document.getElementById('comic-container').appendChild(imgContainer);
-                i++;
-            }
+            let imgContainer = document.createElement('div');
+            imgContainer.className = 'comic-page';
+            let img = document.createElement('img');
+            img.src = urlParams.get('img' + i);
+            
+            imgContainer.appendChild(img);
+            document.getElementById('comic-container').appendChild(imgContainer);
+            i++;
         }
 
         if (!imagesFound) {
-            document.getElementById('comic-container').innerHTML = "<h2 style='color:white;text-align:center;'>Gambar gagal dimuat.</h2>";
+            document.getElementById('comic-container').innerHTML = "<h2 style='color:white;text-align:center;'>Gambar gagal dimuat atau URL tidak valid.</h2>";
         }
     </script>
