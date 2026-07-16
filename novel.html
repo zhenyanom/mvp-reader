@@ -32,26 +32,29 @@
             window.location.search = refreshParams.toString();
         };
 
-        // 🌟 PEMBONGKAR SANDI REVERSE BASE64
-        let tk = urlParams.get('tk');
-        let botToken = tk ? atob(tk.split('').reverse().join('')) : '';
-
+        // KEMBALI MENGGUNAKAN VERSI STABIL
         async function loadNovelText() {
             const contentArea = document.getElementById('content-area');
             const loadingText = document.getElementById('loading');
             
-            let pStr = urlParams.get('p');
-            if (!pStr) {
-                loadingText.textContent = "⚠️ Tidak ada lembaran teks yang ditemukan.";
+            let txtUrls = [];
+            let i = 0;
+            
+            while(urlParams.has('txt' + i)) {
+                txtUrls.push(urlParams.get('txt' + i));
+                i++;
+            }
+
+            if (txtUrls.length === 0) {
+                loadingText.textContent = "⚠️ Tidak ada teks yang ditemukan.";
                 return;
             }
 
-            let paths = pStr.split(',');
             let fullText = "";
 
-            for(let path of paths) {
+            for(let url of txtUrls) {
                 try {
-                    let response = await fetch(`https://api.telegram.org/file/bot${botToken}/${path}`);
+                    let response = await fetch(url);
                     if (response.ok) {
                         let text = await response.text();
                         fullText += text + "\n\n";
@@ -68,7 +71,7 @@
                 if (trimmed.length > 0) {
                     let pTag = document.createElement('p');
                     pTag.className = 'novel-paragraph';
-                    pTag.textContent = trimmed; 
+                    pTag.textContent = trimmed;
                     contentArea.appendChild(pTag);
                 }
             });
