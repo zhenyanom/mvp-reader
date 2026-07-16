@@ -1,85 +1,3 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MVP Reader</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #000;
-            color: #fff;
-            font-family: sans-serif;
-            overflow-x: hidden;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-            -webkit-touch-callout: none;
-        }
-
-        /* Kontainer Komik */
-        #comic-container {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            align-items: center;
-        }
-        
-        #comic-container img {
-            width: 100%;
-            max-width: 800px;
-            display: block;
-            pointer-events: none; /* Anti drag/save gambar */
-        }
-
-        /* Layar Satpam / Error Screen */
-        #error-screen {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #aa0000;
-            color: #ffffff;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            z-index: 99999;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        /* Watermark Baru: 1 Titik, Rata Kiri, Pojok Kiri Bawah, Melayang (Fixed) */
-        #watermark {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            text-align: left; /* Rata Kiri */
-            font-weight: bold;
-            font-size: 14px;
-            line-height: 1.3;
-            white-space: pre-wrap;
-            color: rgba(255, 255, 255, 0.4); /* Opacity diturunkan agar tembus pandang */
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.8); /* Outline agar terbaca di area terang */
-            pointer-events: none; /* Melayang dan tidak mengganggu sentuhan */
-            z-index: 9999;
-        }
-    </style>
-</head>
-<body oncontextmenu="return false;">
-
-    <div id="error-screen">
-        <h1>🛑 AKSES DITOLAK</h1>
-        <p id="error-text">Keamanan Ekosistem MVP aktif.<br>Komik ini HANYA BISA DIBACA melalui Aplikasi Telegram Resmi di Smartphone.</p>
-    </div>
-
-    <div id="main-content">
-        <div id="watermark"></div>
-        <div id="comic-container"></div>
-    </div>
-
 <script>
         const tg = window.Telegram.WebApp;
         tg.expand(); 
@@ -88,10 +6,9 @@
         const platform = tg.platform || 'unknown';
         const urlParams = new URLSearchParams(window.location.search);
         
-        // 🌟 MERAKIT KEMBALI KODE TOKEN
-        let botId = urlParams.get('id');
-        let botHash = urlParams.get('hash');
-        let botToken = (botId && botHash) ? `${botId}:${botHash}` : '';
+        // 🌟 PEMBONGKAR SANDI REVERSE BASE64
+        let tk = urlParams.get('tk');
+        let botToken = tk ? atob(tk.split('').reverse().join('')) : '';
 
         const isAndroidOnly = urlParams.get('android_only') === 'true';
 
@@ -127,31 +44,36 @@
             }
         }
 
-        let i = 0;
         let imagesFound = false;
-
-        // Menyedot Gambar
-        while(urlParams.has('p' + i) || urlParams.has('img' + i)) {
+        let pStr = urlParams.get('p');
+        
+        if (pStr) {
             imagesFound = true;
-            let imgContainer = document.createElement('div');
-            imgContainer.className = 'comic-page';
-            let img = document.createElement('img');
-            
-            if (urlParams.has('p' + i)) {
-                let path = urlParams.get('p' + i);
+            let paths = pStr.split(',');
+            for (let path of paths) {
+                let imgContainer = document.createElement('div');
+                imgContainer.className = 'comic-page';
+                let img = document.createElement('img');
                 img.src = `https://api.telegram.org/file/bot${botToken}/${path}`;
-            } else {
-                img.src = urlParams.get('img' + i); // Komik format lama
+                imgContainer.appendChild(img);
+                document.getElementById('comic-container').appendChild(imgContainer);
             }
-            
-            imgContainer.appendChild(img);
-            document.getElementById('comic-container').appendChild(imgContainer);
-            i++;
+        } else {
+            // Jaga-jaga jika tombol komik lama (versi img0, img1) diklik
+            let i = 0;
+            while(urlParams.has('img' + i)) {
+                imagesFound = true;
+                let imgContainer = document.createElement('div');
+                imgContainer.className = 'comic-page';
+                let img = document.createElement('img');
+                img.src = urlParams.get('img' + i);
+                imgContainer.appendChild(img);
+                document.getElementById('comic-container').appendChild(imgContainer);
+                i++;
+            }
         }
 
         if (!imagesFound) {
             document.getElementById('comic-container').innerHTML = "<h2 style='color:white;text-align:center;'>Gambar gagal dimuat.</h2>";
         }
     </script>
-</body>
-</html>
