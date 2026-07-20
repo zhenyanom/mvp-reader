@@ -1,15 +1,123 @@
-<script>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MVP Novel Reader</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
+    <style>
+        /* TEMA GELAP (DARK MODE) */
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            /* 🛡️ PERTAHANAN ANTI-COPAS */
+            user-select: none; 
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        /* HEADER JUDUL NOVEL */
+        #header {
+            background-color: #1a1a1a;
+            color: #d4af37; /* Warna emas elegan */
+            padding: 15px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            border-bottom: 2px solid #333;
+            z-index: 100;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.5);
+        }
+
+        /* AREA TEKS NOVEL */
+        #content-area {
+            padding: 20px 25px;
+            line-height: 1.8; /* Jarak antar baris biar lega */
+            font-size: 1.15em;
+        }
+
+        /* Styling Paragraf, Bold, dan Italic */
+        #content-area p {
+            margin-bottom: 18px;
+            text-align: justify; /* Teks rata kanan kiri */
+            text-indent: 30px; /* Paragraf menjorok ke dalam */
+        }
+        #content-area strong {
+            font-weight: bold;
+            color: #ffffff; /* Bold sedikit lebih terang */
+        }
+        #content-area em {
+            font-style: italic;
+            color: #cccccc; /* Italic sedikit lebih soft */
+        }
+
+        /* LAYAR ERROR PC */
+        #error-screen {
+            display: none;
+            background-color: #8b0000;
+            color: white;
+            height: 100vh;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* WATERMARK TATO GAIB */
+        #watermark-container {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: 9999;
+            overflow: hidden;
+        }
+        .watermark-text {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.04);
+            font-size: 16px;
+            font-weight: bold;
+            white-space: nowrap;
+            transform: rotate(-30deg);
+        }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <div id="error-screen">
+        <h2 style="font-size: 3em; margin-bottom: 10px;">🛑</h2>
+        <h2>AKSES DITOLAK</h2>
+        <p>Novel ini hanya bisa dibaca melalui Aplikasi Telegram di HP (Android / iOS).</p>
+    </div>
+
+    <div id="main-ui">
+        <div id="header"><span id="novel-title">Memuat Judul...</span></div>
+        <div id="watermark-container"></div>
+        <div id="content-area">
+            <p id="loading" style="text-align:center; color:#888; margin-top: 50px;">
+                ⏳ Sedang membongkar lembaran novel...
+            </p>
+        </div>
+    </div>
+
+    <script>
         const tg = window.Telegram.WebApp;
-        tg.expand(); 
+        tg.expand();
         tg.ready();
 
         const platform = tg.platform || 'unknown';
         const errorScreen = document.getElementById('error-screen');
-        const outer = document.getElementById('binder-outer');
-        
+        const mainUi = document.getElementById('main-ui');
+
         if (platform !== 'android' && platform !== 'android_x' && platform !== 'ios') {
-            errorScreen.style.display = 'block';
-            outer.style.display = 'none';
+            errorScreen.style.display = 'flex';
+            mainUi.style.display = 'none';
             document.body.style.overflow = 'hidden';
             throw new Error("Akses PC Ditolak.");
         }
@@ -17,64 +125,81 @@
         const user = tg.initDataUnsafe?.user;
         if (user) {
             const usn = user.username ? "@" + user.username : user.first_name;
-            document.getElementById('wm-usn').textContent = usn;
-            document.getElementById('wm-id').textContent = user.id;
+            const wmText = `MVP ${usn} - DO NOT REPOST`;
+            const container = document.getElementById('watermark-container');
+            
+            for (let i = 0; i < 25; i++) {
+                let wm = document.createElement('div');
+                wm.className = 'watermark-text';
+                wm.textContent = wmText;
+                wm.style.top = `${Math.random() * 100}%`;
+                wm.style.left = `${Math.random() * 100}%`;
+                container.appendChild(wm);
+            }
         }
 
         const urlParams = new URLSearchParams(window.location.search);
         let titleParam = urlParams.get('title') || 'NOVEL MVP';
-        titleParam = titleParam.replace(/_/g, ' '); 
-        document.getElementById('novel-title').textContent = titleParam;
+        document.getElementById('novel-title').textContent = titleParam.replace(/_/g, ' ').toUpperCase();
 
-        document.getElementById('refresh-btn-y2k').onclick = () => {
-            let refreshParams = new URLSearchParams(window.location.search);
-            refreshParams.set('t', Date.now()); 
-            window.location.search = refreshParams.toString();
-        };
-
-        // KEMBALI MENGGUNAKAN VERSI STABIL
         async function loadNovelText() {
             const contentArea = document.getElementById('content-area');
             const loadingText = document.getElementById('loading');
             
             let txtUrls = [];
             let i = 0;
-            
             while(urlParams.has('txt' + i)) {
                 txtUrls.push(urlParams.get('txt' + i));
                 i++;
             }
 
             if (txtUrls.length === 0) {
-                loadingText.textContent = "⚠️ Tidak ada teks yang ditemukan.";
+                loadingText.textContent = "⚠️ Halaman kosong. Tidak ada file teks yang ditemukan.";
                 return;
             }
 
-            let fullText = "";
+            let finalHtml = "";
 
             for(let url of txtUrls) {
                 try {
                     let response = await fetch(url);
                     if (response.ok) {
-                        let text = await response.text();
-                        fullText += text + "\n\n";
+                        // 1. JIKA FILE ADALAH DOCX DARI MS WORD
+                        if (url.toLowerCase().includes('.docx')) {
+                            let arrayBuffer = await response.arrayBuffer();
+                            // Menggunakan Mammoth.js untuk mengekstrak teks, bold, dan italic
+                            let result = await mammoth.convertToHtml({arrayBuffer: arrayBuffer});
+                            finalHtml += result.value;
+                        } 
+                        // 2. JIKA FILE ADALAH TXT BIASA
+                        else {
+                            let text = await response.text();
+                            // Sanitize HTML
+                            let safeText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                            
+                            // Fitur Bonus: Ubah format bintang menjadi Bold dan Italic
+                            safeText = safeText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                            safeText = safeText.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+                            let paragraphs = safeText.split('\n');
+                            paragraphs.forEach(para => {
+                                let trimmed = para.trim();
+                                if (trimmed.length > 0) {
+                                    finalHtml += `<p>${trimmed}</p>`;
+                                }
+                            });
+                        }
                     }
-                } catch (e) { console.error("Gagal memuat teks:", e); }
+                } catch (e) {
+                    console.error("Gagal memuat:", e);
+                }
             }
 
-            let safeText = fullText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            let paragraphs = safeText.split('\n');
             loadingText.style.display = 'none';
-
-            paragraphs.forEach(para => {
-                let trimmed = para.trim();
-                if (trimmed.length > 0) {
-                    let pTag = document.createElement('p');
-                    pTag.className = 'novel-paragraph';
-                    pTag.textContent = trimmed;
-                    contentArea.appendChild(pTag);
-                }
-            });
+            contentArea.innerHTML = finalHtml;
         }
+
         loadNovelText();
     </script>
+</body>
+</html>
