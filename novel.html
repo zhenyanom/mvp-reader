@@ -3,267 +3,199 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MVP Novel Reader - RPG Binder Edition</title>
+    <title>MVP Novel Reader</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
     <style>
-        /* 1. CONFIG & TEMA BINDER RPG */
         :root {
-            /* Warna Kertas Krem Tanda Buku Tua */
-            --paper-color: #fffdf5; 
-            /* Warna Jilidan Binder Cokelat Tua */
-            --binder-spine: #5d4037; 
-            /* Warna Teks Novel */
-            --text-color: #3e2723; 
-            /* Warna Judul Header */
-            --header-text: #fff;
-            /* Tinggi Baris (Harus sama dengan background-size garis) */
-            --line-height: 1.8em; 
+            --bg-color: #ffffff; --text-color: #111111;
+            --header-bg: #f8f9fa; --header-text: #d4af37; --header-border: #ddd;
+            --strong-text: #000000; --em-text: #333333;
+            --btn-bg: #e0e0e0; --btn-text: #333;
+            --btn-active-bg: #d4af37; --btn-active-text: #fff;
+            --wm-text-color: rgba(0, 0, 0, 0.06);
         }
-
+        body.theme-dark {
+            --bg-color: #121212; --text-color: #e0e0e0;
+            --header-bg: #1a1a1a; --header-text: #d4af37; --header-border: #333;
+            --strong-text: #ffffff; --em-text: #cccccc;
+            --btn-bg: #333; --btn-text: #eee;
+            --btn-active-bg: #d4af37; --btn-active-text: #fff;
+            --wm-text-color: rgba(255, 255, 255, 0.05);
+        }
+        body.theme-pastel {
+            --bg-color: #f6f1e1; --text-color: #2c3e50;
+            --header-bg: #ebe1c5; --header-text: #8e6c1e; --header-border: #dcd0a9;
+            --strong-text: #1a252f; --em-text: #4a6278;
+            --btn-bg: #dcd0a9; --btn-text: #5d4037;
+            --btn-active-bg: #8e6c1e; --btn-active-text: #fff;
+            --wm-text-color: rgba(93, 64, 55, 0.07);
+        }
         body {
-            margin: 0;
-            padding: 0;
-            /* Warna di luar binder (Cokelat gelap) */
-            background-color: #3e2723; 
-            font-family: 'Courier New', Courier, monospace; /* Font mesin ketik ala laporan */
-            overflow-x: hidden;
-            /* 🛡️ PERTAHANAN ANTI-COPAS MUTLAK */
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
+            margin: 0; padding: 0;
+            background-color: var(--bg-color); color: var(--text-color);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            overflow-x: hidden; transition: background-color 0.3s ease, color 0.3s ease;
+            -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
             -webkit-touch-callout: none;
-            /* Anti Context Menu */
-            -webkit-user-drag: none;
         }
-
-        /* 2. RANGKA BINDER */
-        #main-content {
-            background: var(--paper-color);
-            /* EFEK KERTAS BERGARIS (LINED PAPER) */
-            background-image: linear-gradient(rgba(178, 177, 172, 0.4) .1em, transparent .1em);
-            background-size: 100% var(--line-height);
-
-            min-height: 100vh;
-            max-width: 800px;
-            margin: 20px auto; /* Memberi jarak dari tepi layar */
-            position: relative;
-            box-shadow: 8px 8px 20px rgba(0,0,0,0.6);
-            border-radius: 8px;
-            
-            /* EFEK JILIDAN BINDER DI SISI KIRI */
-            border-left: 20px solid var(--binder-spine);
-            overflow: hidden; /* Untuk menjaga header tetap di dalam border radius */
-        }
-
-        /* 3. HEADER JUDUL NOVEL (Cocok dengan Spine) */
         #header {
-            background-color: var(--binder-spine);
-            color: var(--header-text);
-            padding: 15px;
-            text-align: center;
-            font-size: 1.1em;
-            font-weight: bold;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            border-bottom: 3px solid rgba(0,0,0,0.2);
-            box-shadow: 0px 4px 10px rgba(0,0,0,0.4);
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            background-color: var(--header-bg); color: var(--header-text);
+            padding: 10px 15px; text-align: center; font-size: 1em; font-weight: bold;
+            position: sticky; top: 0; z-index: 100;
+            border-bottom: 1px solid var(--header-border); box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
         }
-
-        /* 4. AREA TEKS NOVEL (MENEMPEL DI GARIS) */
         #content-area {
-            /* padding bawah ekstra untuk Chibi & Watermark fixed */
-            padding: 10px 25px 150px 25px; 
-            color: var(--text-color);
-            font-size: 1.1em;
+            padding: 20px 20px 120px 20px; line-height: 1.8; font-size: 1.15em;
+            max-width: 800px; margin: 0 auto;
         }
-
-        /* Styling Paragraf agar menempel pas di atas garis background */
-        #content-area p {
-            margin: 0 0 var(--line-height) 0; /* Margin bawah sama dengan line-height */
-            line-height: var(--line-height);
-            text-align: justify;
-            text-indent: 30px;
-        }
+        #content-area p { margin-bottom: 18px; text-align: justify; text-indent: 30px; }
+        #content-area strong { font-weight: bold; color: var(--strong-text); }
+        #content-area em { font-style: italic; color: var(--em-text); }
         
-        #content-area strong {
-            font-weight: bold;
-            color: #000;
-        }
-        #content-area em {
-            font-style: italic;
-            color: #555;
-        }
-
-        /* 5. BONUS: CHIBI ZHENYA & TAEKJOO FOOTER (Milik Master) */
-        #chibi-footer {
-            width: 100%;
-            text-align: center;
-            margin-top: 50px;
-            padding-bottom: 20px;
-            opacity: 0.9;
-        }
-        #chibi-footer img {
-            max-width: 80%; /* Tidak terlalu penuh */
-            height: auto;
-            border-radius: 5px;
-            /* Tidak bisa interaksi agar anti maling */
-            pointer-events: none; 
-            -webkit-user-drag: none;
-        }
-
-        /* 6. LAYAR SATPAM / ERROR SCREEN (Anti PC) */
         #error-screen {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #aa0000;
-            color: #ffffff;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            z-index: 99999;
-            padding: 20px;
-            box-sizing: border-box;
-            font-family: sans-serif;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #aa0000; color: #ffffff; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center; z-index: 99999; padding: 20px;
         }
-
-        /* 7. WATERMARK (DISESUAIKAN UNTUK KERTAS KREM) */
-        #watermark {
-            position: fixed;
-            bottom: 20px;
-            left: 30px; /* Sedikit geser ke kanan dari spine */
-            text-align: left;
-            font-weight: bold;
-            font-size: 13px;
-            line-height: 1.3;
-            white-space: pre-wrap;
-            /* Warna Watermark HITAM SAMAR (Tidak Putih lagi) */
-            color: rgba(0, 0, 0, 0.08); 
-            text-shadow: none; /* Shadow dimatikan agar tidak kotor di kertas krem */
-            pointer-events: none;
-            z-index: 9999;
-            font-family: sans-serif;
+        #watermark-text {
+            position: fixed; bottom: 20px; left: 20px; text-align: left; font-weight: bold;
+            font-size: 12px; line-height: 1.3; white-space: pre-wrap; color: var(--wm-text-color);
+            pointer-events: none; z-index: 9998;
         }
+        #watermark-chibi {
+            position: fixed; bottom: 15px; right: 15px; width: 60px; height: auto;
+            opacity: 0.15; pointer-events: none; z-index: 9997; border-radius: 5px;
+        }
+        #theme-switcher {
+            position: fixed; top: 60px; right: 10px; background-color: var(--header-bg);
+            border: 1px solid var(--header-border); border-radius: 20px; padding: 5px;
+            display: flex; gap: 5px; z-index: 90; box-shadow: 0px 2px 5px rgba(0,0,0,0.2);
+        }
+        .theme-btn {
+            border: none; background-color: var(--btn-bg); color: var(--btn-text);
+            padding: 6px 12px; border-radius: 15px; font-size: 11px; cursor: pointer; font-weight: bold;
+        }
+        .theme-btn.active { background-color: var(--btn-active-bg); color: var(--btn-active-text); }
     </style>
 </head>
-<body oncontextmenu="return false;">
-
+<body oncontextmenu="return false;" class="theme-light">
     <div id="error-screen">
         <h1>🛑 AKSES DITOLAK</h1>
-        <p id="error-text">Novel ini HANYA BISA DIBACA melalui Aplikasi Telegram Resmi di Smartphone.</p>
+        <p>Novel ini HANYA BISA DIBACA melalui Aplikasi Telegram Resmi.</p>
     </div>
-
     <div id="main-content">
         <div id="header"><span id="novel-title">Memuat Judul...</span></div>
-        <div id="watermark"></div>
-        <div id="content-area">
-            <p id="loading" style="text-align:center; color:#888; margin-top: 50px;">
-                ⏳ Sedang membongkar lembaran novel...
-            </p>
+        <div id="theme-switcher">
+            <button class="theme-btn active" onclick="setTheme('light')" id="btn-light">LIGHT</button>
+            <button class="theme-btn" onclick="setTheme('dark')" id="btn-dark">DARK</button>
+            <button class="theme-btn" onclick="setTheme('pastel')" id="btn-pastel">PASTEL</button>
         </div>
-        
-        <div id="chibi-footer">
-            <img src="chibi.jpg" alt="MVP Chibi Zhenya Taekjoo" onerror="this.style.display='none'">
+        <div id="watermark-text"></div>
+        <img src="chibi.jpg" id="watermark-chibi" alt="" onerror="this.style.display='none'">
+        <div id="content-area">
+            <p id="loading" style="text-align:center; color:#888; margin-top: 50px;">⏳ Menembus server perpustakaan, merakit lembaran...</p>
         </div>
     </div>
-
     <script>
         const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
+        tg.ready(); tg.expand();
 
-        // 1. Deteksi Platform & Parameter URL
         const platform = tg.platform || 'unknown';
-        const urlParams = new URLSearchParams(window.location.search);
-        
-        // 2. Logika Satpam (Blokir PC / Web Browser Biasa)
-        const allowedPlatforms = ['android', 'android_x', 'ios'];
-        if (!allowedPlatforms.includes(platform)) {
+        if (!['android', 'android_x', 'ios'].includes(platform)) {
             document.getElementById('main-content').style.display = 'none';
             document.getElementById('error-screen').style.display = 'flex';
             throw new Error("Akses PC Ditolak.");
         }
 
-        // 3. SET JUDUL NOVEL
+        const urlParams = new URLSearchParams(window.location.search);
         if(urlParams.has('title')) {
             document.getElementById('novel-title').textContent = urlParams.get('title').replace(/_/g, ' ').toUpperCase();
         }
 
-        // 4. GENERATE WATERMARK ADAPTIF (Format Sama Persis dengan Comic)
         const user = tg.initDataUnsafe?.user;
         const usn = user?.username ? `@${user.username}` : (user?.first_name || 'NoName');
         const userId = user?.id || 'UnknownID';
-        const watermarkText = `👑 MVP\n${usn} (${userId})\nFree | DO NOT REPOST`;
-        document.getElementById('watermark').innerText = watermarkText;
+        document.getElementById('watermark-text').innerText = `👑 MVP\n${usn} (${userId})\nFree | DO NOT REPOST`;
 
-        // 5. RENDER TEKS NOVEL DARI BOT (.docx & .txt)
+        function setTheme(themeName) {
+            document.body.classList.remove('theme-light', 'theme-dark', 'theme-pastel');
+            document.body.classList.add('theme-' + themeName);
+            document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('btn-' + themeName).classList.add('active');
+            localStorage.setItem('mvp_novel_theme', themeName);
+        }
+        setTheme(localStorage.getItem('mvp_novel_theme') || 'light');
+
+        // 🌟 JALUR TEROWONGAN (CORS PROXY) AGAR TIDAK DIBLOKIR BROWSER HP
+        async function fetchSecureFile(url) {
+            const proxies = [
+                'https://corsproxy.io/?' + encodeURIComponent(url),
+                'https://api.allorigins.win/raw?url=' + encodeURIComponent(url)
+            ];
+            for (let proxy of proxies) {
+                try {
+                    let response = await fetch(proxy);
+                    if (response.ok) return response;
+                } catch (e) {
+                    console.log("Mencoba jalur lain...");
+                }
+            }
+            throw new Error("Koneksi ditolak oleh browser HP-mu.");
+        }
+
         async function loadNovelText() {
             const contentArea = document.getElementById('content-area');
             const loadingText = document.getElementById('loading');
             
-            let txtUrls = [];
-            let i = 0;
-            while(urlParams.has('txt' + i)) {
-                txtUrls.push(urlParams.get('txt' + i));
-                i++;
-            }
+            let txtUrls = []; let i = 0;
+            while(urlParams.has('txt' + i)) { txtUrls.push(urlParams.get('txt' + i)); i++; }
 
             if (txtUrls.length === 0) {
-                loadingText.innerHTML = "⚠️ Halaman kosong. Tidak ada file yang ditemukan.<br><br>Pastikan kamu meng-upload file <b>.txt</b> atau <b>.docx</b>.";
+                loadingText.innerHTML = "⚠️ Halaman kosong. File tidak ditemukan.";
                 return;
             }
 
             let finalHtml = "";
-
             for(let url of txtUrls) {
                 try {
-                    let response = await fetch(url);
-                    if (response.ok) {
-                        // JIKA FORMAT FILE ADALAH DOCX
-                        if (url.toLowerCase().includes('.docx')) {
-                            let arrayBuffer = await response.arrayBuffer();
-                            // Konversi Mammoth
-                            let result = await mammoth.convertToHtml({arrayBuffer: arrayBuffer});
-                            finalHtml += result.value;
-                        } 
-                        // JIKA FORMAT FILE ADALAH TXT
-                        else {
-                            let text = await response.text();
-                            let safeText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                            
-                            // Eksekusi Bintang menjadi Bold dan Italic
-                            safeText = safeText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                            safeText = safeText.replace(/\*(.*?)\*/g, '<em>$1</em>');
-
-                            let paragraphs = safeText.split('\n');
-                            paragraphs.forEach(para => {
-                                let trimmed = para.trim();
-                                if (trimmed.length > 0) {
-                                    finalHtml += `<p>${trimmed}</p>`;
-                                }
-                            });
-                        }
-                    } else {
-                        loadingText.innerHTML = `⚠️ Gagal mengunduh file dari Telegram.<br>Error Kode: ${response.status}`;
+                    // MENGGUNAKAN JALUR PROXY
+                    let response = await fetchSecureFile(url);
+                    let arrayBuffer = await response.arrayBuffer();
+                    let bytes = new Uint8Array(arrayBuffer.slice(0, 4));
+                    
+                    // 🌟 DETEKSI MAGIC BYTES DOKUMEN MASTER
+                    // Jika byte berawalan 50 4B = Itu adalah file DOCX (Word Modern)
+                    if (bytes[0] === 0x50 && bytes[1] === 0x4B) {
+                        let result = await mammoth.convertToHtml({arrayBuffer: arrayBuffer});
+                        finalHtml += result.value;
+                    } 
+                    // Jika byte berawalan D0 CF = Itu adalah file DOC (Word Jadul Tahun 97)
+                    else if (bytes[0] === 0xD0 && bytes[1] === 0xCF) {
+                        loadingText.innerHTML = `⚠️ <b>FILE DITOLAK</b><br><br>Sistem mendeteksi kamu meng-upload format <b>.doc</b> usang.<br><br>Harap buka file tersebut di Microsoft Word, lalu pilih "Save As" dan ganti formatnya menjadi <b>Word Document (*.docx)</b> sebelum dikirim ke bot!`;
                         return;
                     }
+                    // ASUMSI: Jika bukan keduanya, berarti itu TXT biasa (Bisa pakai **bold** dan *italic*)
+                    else {
+                        let decoder = new TextDecoder('utf-8');
+                        let text = decoder.decode(arrayBuffer);
+                        let safeText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                        safeText = safeText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                        safeText = safeText.replace(/\*(.*?)\*/g, '<em>$1</em>');
+                        
+                        let paragraphs = safeText.split('\n');
+                        paragraphs.forEach(para => {
+                            let trimmed = para.trim();
+                            if (trimmed.length > 0) finalHtml += `<p>${trimmed}</p>`;
+                        });
+                    }
                 } catch (e) {
-                    loadingText.innerHTML = `⚠️ Terjadi kesalahan saat membongkar file:<br>${e.message}`;
-                    console.error("Gagal memuat teks:", e);
-                    return;
+                    loadingText.innerHTML = `⚠️ Terjadi kesalahan jaringan:<br>${e.message}`; return;
                 }
             }
-
-            // Tampilkan Teks dan Hilangkan Tulisan Loading
             loadingText.style.display = 'none';
             contentArea.innerHTML += finalHtml;
         }
-
         loadNovelText();
     </script>
 </body>
